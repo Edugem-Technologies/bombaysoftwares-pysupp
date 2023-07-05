@@ -1,6 +1,6 @@
-from datetime import datetime,timedelta
+from datetime import datetime, timedelta
 from time import time
-import random, re, string
+import random, re, string, uuid
 from random import randint
 
 def str_to_bool(s):
@@ -206,7 +206,7 @@ def file_name_to_readable_name(file_name):
     """
     file_name = file_name.split('.')[0] # Split the file name by the dot and keep only the first part
     file_name = file_name.replace('-', ' ') # Replace hyphens with spaces
-    return ("".join(re.split("[^a-zA-Z\s]*", file_name))).capitalize().strip() # Remove non-alphabetic characters except spaces, Capitalize the first letter and remove leading/trailing spaces
+    return ("".join(re.split("[^a-zA-Z\\s]*", file_name))).capitalize().strip() # Remove non-alphabetic characters except spaces, Capitalize the first letter and remove leading/trailing spaces
 
 def get_body_mass_index(weight, height):
     """
@@ -486,3 +486,108 @@ def get_time_duration(start_date,end_date):
     minutes = (diff.seconds % 3600) // 60
 
     return "{days} days, <br>{hours} hours, <br>{minutes} minutes".format(days=days, hours=hours, minutes=minutes)
+
+def get_api_key():
+    """
+    Generate and return a new API key using UUID.
+
+    This function generates a new API key using the UUID (Universally Unique Identifier) library.
+    It returns the generated API key as a UUID object.
+
+    Returns:
+        UUID: The generated API key.
+
+    Example:
+        >>> get_api_key()
+
+    """
+    return uuid.uuid4() # Generate and return a new UUID as the API key
+
+def generate_slug_by_org_id(title, org_id):
+    """
+    Generate a slug by combining a title and organization ID.
+
+    This function takes a title and organization ID as input, and generates a slug by combining them.
+    The generated slug is converted to lowercase and any whitespace is replaced with hyphens.
+
+    Args:
+        title (str): The title to be included in the slug.
+        org_id (int or str): The organization ID to be included in the slug.
+
+    Returns:
+        str: The generated slug.
+
+    Example:
+        >>> generate_slug_by_org_id('Hello World', 123)
+        'hello-world-123'
+
+    """
+    title = str(title).strip() # Remove leading/trailing whitespace from the title
+    slug = title.lower() + '-' + str(org_id) # Combine the lowercase title and organization ID with a hyphen
+    slug = re.sub(' +', '-', slug) # Replace any whitespace with hyphens
+    return slug
+
+class InputValidation:
+    """
+    A class for input validation patterns and methods.
+
+    Example:
+        # Validating a string using a specific pattern
+        string = "HelloWorld123"
+        if InputValidation.is_valid(string, InputValidation.ALPHA_NUMERIC):
+            print("String is valid!")
+        else:
+            print("String is not valid!")
+
+    """
+    STRING = '^[a-zA-Z]+$' # Matches strings with only alphabetic characters
+    STRING_SPACE = '^[a-zA-Z\\s]+$' # Matches strings with alphabetic characters and spaces
+    STRING_UPPERCASE = '^[A-Z]+$' # Matches strings with only uppercase alphabetic characters
+    STRING_UPPERCASE_SPACE = '^[A-Z\\s]+$' # Matches strings with uppercase alphabetic characters and spaces
+    STRING_LOWERCASE_SPACE = '^[a-z\\s]+$'  # Matches strings with lowercase alphabetic characters and spaces
+    NUMERIC = '^[1-9][0-9]*$' # Matches positive integers
+    ALPHA_NUMERIC = '^[A-Za-z0-9]+$' # Matches alphanumeric strings
+    ALPHA_NUMERIC_SPACE = '^[A-Za-z0-9\\s]+$' # Matches alphanumeric strings with spaces
+    MOBILE_NUMBER = '^[0-9]{10}+$' # Matches 10-digit mobile numbers
+    EMAIL = '^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$' # Matches valid email addresses
+    ALPHA_NUMERIC_SPACE_DASH = '^[-A-Za-z0-9\\s]+$' # Matches alphanumeric strings with spaces and dashes
+
+    @classmethod
+    def is_valid(cls, string, validation_type):
+        """
+        Validate if the given string matches the specified validation type.
+
+        Args:
+            string (str): The string to be validated.
+            validation_type (str): The validation type to match against.
+
+        Returns:
+            bool: True if the string matches the validation type, False otherwise.
+
+        """
+        return bool(re.fullmatch(validation_type, str(string)))
+
+def datetime_from_utc_to_local(utc_datetime):
+    """
+    Converts a datetime object from UTC to the local timezone.
+
+    This function takes a datetime object in UTC and converts it to the local timezone.
+    It calculates the offset between the local timezone and UTC based on the current timestamp.
+    The offset is then added to the UTC datetime object to obtain the corresponding local datetime.
+
+    Args:
+        utc_datetime (datetime): The datetime object in UTC.
+
+    Returns:
+        datetime: The datetime object converted to the local timezone.
+
+    Example:
+        >>> utc_dt = datetime(2022, 3, 15, 10, 30, 0)
+        >>> local_dt = datetime_from_utc_to_local(utc_dt)
+        >>> local_dt
+        2022-03-15 10:30:00
+
+    """
+    now_timestamp = time()
+    offset = datetime.fromtimestamp(now_timestamp) - datetime.utcfromtimestamp(now_timestamp)
+    return utc_datetime + offset

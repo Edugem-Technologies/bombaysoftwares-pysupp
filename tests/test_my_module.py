@@ -1,6 +1,6 @@
-from pykit.utils import str_to_bool, format_email, is_invalid, get_current_year, convert_date_of_birth_to_datetime, generate_otp, convert_time, file_name_to_readable_name, get_body_mass_index, is_number, days_to_seconds, generate_random_string, generate_random_number_string, random_with_n_digits, check_is_not_none_or_empty, format_inr, aadhaar_format, format_datetime, get_time_duration
+from pykit.utils import str_to_bool, format_email, is_invalid, get_current_year, convert_date_of_birth_to_datetime, generate_otp, convert_time, file_name_to_readable_name, get_body_mass_index, is_number, days_to_seconds, generate_random_string, generate_random_number_string, random_with_n_digits, check_is_not_none_or_empty, format_inr, aadhaar_format, format_datetime, get_time_duration, get_api_key, generate_slug_by_org_id, InputValidation, datetime_from_utc_to_local
 from datetime import datetime, timedelta
-import pytest, random
+import pytest, random, uuid, re
 
 
 def test_str_to_bool():
@@ -300,4 +300,58 @@ def test_get_time_duration():
     start_date = datetime(2022, 1, 1, 10, 0, 0)
     end_date = datetime(2022, 1, 1, 10, 0, 0)
     assert get_time_duration(start_date, end_date) == "0 days, <br>0 hours, <br>0 minutes"
+
+def test_get_api_key():
+    # Call the function to get the API key
+    api_key = get_api_key()
+
+    # Check if the API key is a UUID object
+    assert isinstance(api_key, uuid.UUID)
+
+def test_generate_slug_by_org_id():
+    # Test case 1: Valid inputs
+    title = 'Hello World'
+    org_id = 123
+    expected_slug = 'hello-world-123'
+    assert generate_slug_by_org_id(title, org_id) == expected_slug
+
+    # Test case 2: Leading/trailing whitespace in title
+    title = '  Hello World  '
+    org_id = 123
+    expected_slug = 'hello-world-123'
+    assert generate_slug_by_org_id(title, org_id) == expected_slug
+
+    # Test case 3: Non-string title
+    title = 123
+    org_id = 123
+    expected_slug = '123-123'
+    assert generate_slug_by_org_id(title, org_id) == expected_slug
+
+def test_input_validation():
+    # Test case 1: Valid string
+    string = "HelloWorld123"
+    validation_type = InputValidation.ALPHA_NUMERIC
+    assert InputValidation.is_valid(string, validation_type) == True
+
+    # Test case 2: Invalid string
+    string = "Hello World!"
+    validation_type = InputValidation.ALPHA_NUMERIC
+    assert InputValidation.is_valid(string, validation_type) == False
+
+    # Test case 3: Valid email
+    string = "test@example.com"
+    validation_type = InputValidation.EMAIL
+    assert InputValidation.is_valid(string, validation_type) == True
+
+    # Test case 4: Invalid email
+    string = "invalid-email"
+    validation_type = InputValidation.EMAIL
+    assert InputValidation.is_valid(string, validation_type) == False
+
+def test_datetime_from_utc_to_local():
+    # Test case 1: UTC datetime in the past
+    utc_dt = datetime(2022, 3, 15, 10, 30, 0)
+    local_dt = datetime_from_utc_to_local(utc_dt)
+    expected_local_dt = utc_dt + timedelta(hours=5, minutes=30)  # Assuming the local timezone has a +05:00 offset
+    assert local_dt == expected_local_dt
 
