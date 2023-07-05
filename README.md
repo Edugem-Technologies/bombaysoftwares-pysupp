@@ -1,6 +1,6 @@
 # pysupp
 
-The bombaysoftwares-pysupp package provides a comprehensive set of utility functions for various operations in Python. These functions simplify common tasks such as date formatting, timestamp conversion,  manipulating strings. This package is designed to enhance the functionality of various operations in your Python projects.
+The bombaysoftwares-pysupp package provides a comprehensive set of utility functions for various operations in Python. These functions simplify common tasks such as date formatting, timestamp conversion, manipulating strings. This package is designed to enhance the functionality of various operations in your Python projects.
 
 ## Installation
 
@@ -28,7 +28,7 @@ str_to_bool('True')
 // Output: True
 str_to_bool('False')
 // Output: False
->>> str_to_bool('invalid')
+str_to_bool('invalid')
 // Output: None
 
 ```
