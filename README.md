@@ -1,4 +1,4 @@
-# pykit
+# pysupp
 
 The bombaysoftwares-pysupp package provides a comprehensive set of utility functions for various operations in Python. These functions simplify common tasks such as date formatting, timestamp conversion,  manipulating strings. This package is designed to enhance the functionality of various operations in your Python projects.
 
