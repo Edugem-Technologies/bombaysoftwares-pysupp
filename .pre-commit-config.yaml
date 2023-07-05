@@ -1,10 +1,10 @@
 repos:
   - repo: local
     hooks:
-      - id: pytest
-        name: pytest
-        entry: pytest
-        language: system
-        pass_filenames: false
+      - id: pytest-check
+        name: pytest-check
+        entry: pytest tests
+        language: python
+        additional_dependencies: [pre-commit, pytest]
         always_run: true
-        stages: [commit]
+        pass_filenames: false
