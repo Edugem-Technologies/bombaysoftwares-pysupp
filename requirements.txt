@@ -1,0 +1,17 @@
+cfgv==3.3.1
+distlib==0.3.6
+exceptiongroup==1.1.2
+filelock==3.12.2
+identify==2.5.24
+iniconfig==2.0.0
+nodeenv==1.8.0
+packaging==23.1
+platformdirs==3.8.0
+pluggy==1.2.0
+pre-commit==3.3.3
+pytest==7.4.0
+python-dateutil==2.8.2
+PyYAML==6.0
+six==1.16.0
+tomli==2.0.1
+virtualenv==20.23.1

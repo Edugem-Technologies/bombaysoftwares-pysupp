@@ -1,0 +1,5 @@
+.pytest_cache
+pykit/__pycache__
+tests/__pycache__
+venv
+build
