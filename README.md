@@ -7,7 +7,7 @@ The bombaysoftwares-pysupp package provides a comprehensive set of utility funct
 To use the Date Utils package, you can install it via pip:
 
 ```bash
-pip install bombaysoftwares-pysupp
+pip install bombaysoftwares_pysupp
 ```
 
 ## Usage
@@ -15,7 +15,7 @@ pip install bombaysoftwares-pysupp
 Import the desired functions from the package:
 
 ```bash
-from bombaysoftwares-pysupp import str_to_bool, format_email
+from bombaysoftwares_pysupp import str_to_bool, format_email
 ```
 
 ## str_to_bool

@@ -1,7 +1,7 @@
 Metadata-Version: 2.1
 Name: bombaysoftwares-pysupp
-Version: 1.0.1
-Summary: The bombaysoftwares-pysupp package provides a comprehensive set of utility functions for various operations in Python. These functions simplify common tasks such as date formatting, timestamp conversion, manipulating strings. This package is designed to enhance the functionality of various operations in your Python projects.
+Version: 1.0.2
+Summary: The bombaysoftwares_pysupp package provides a comprehensive set of utility functions for various operations in Python. These functions simplify common tasks such as date formatting, timestamp conversion, manipulating strings. This package is designed to enhance the functionality of various operations in your Python projects.
 Home-page: UNKNOWN
 Author: Bombay Softwares
 License: MIT
@@ -10,14 +10,14 @@ Project-URL: Source Code, https://github.com/Edugem-Technologies/bombaysoftwares
 Project-URL: Documentation, https://github.com/Edugem-Technologies/bombaysoftwares-pysupp#readme
 Description: # pysupp
         
-        The bombaysoftwares-pysupp package provides a comprehensive set of utility functions for various operations in Python. These functions simplify common tasks such as date formatting, timestamp conversion, manipulating strings. This package is designed to enhance the functionality of various operations in your Python projects.
+        The bombaysoftwares_pysupp package provides a comprehensive set of utility functions for various operations in Python. These functions simplify common tasks such as date formatting, timestamp conversion, manipulating strings. This package is designed to enhance the functionality of various operations in your Python projects.
         
         ## Installation
         
         To use the Date Utils package, you can install it via pip:
         
         ```bash
-        pip install bombaysoftwares-pysupp
+        pip install bombaysoftwares_pysupp
         ```
         
         ## Usage
@@ -25,7 +25,7 @@ Description: # pysupp
         Import the desired functions from the package:
         
         ```bash
-        from bombaysoftwares-pysupp import str_to_bool, format_email
+        from bombaysoftwares_pysupp import str_to_bool, format_email
         ```
         
         ## str_to_bool

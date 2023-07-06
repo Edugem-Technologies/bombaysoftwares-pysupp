@@ -1,7 +1,7 @@
-from pykit.utils import str_to_bool, format_email, is_invalid, get_current_year, convert_date_of_birth_to_datetime, generate_otp, convert_time, file_name_to_readable_name, get_body_mass_index, is_number, days_to_seconds, generate_random_string, generate_random_number_string, random_with_n_digits, check_is_not_none_or_empty, format_inr, aadhaar_format, format_datetime, get_time_duration, get_api_key, generate_slug_by_org_id, InputValidation, datetime_from_utc_to_local
+from bombaysoftwares_pysupp.utils import str_to_bool, format_email, is_invalid, get_current_year, convert_date_of_birth_to_datetime, generate_otp, convert_time, file_name_to_readable_name, get_body_mass_index, is_number, days_to_seconds, generate_random_string, generate_random_number_string, random_with_n_digits, check_is_not_none_or_empty, format_inr, aadhaar_format, format_datetime, get_time_duration, get_api_key, generate_slug_by_org_id, InputValidation, datetime_from_utc_to_local, encode_jwt_token, decode_jwt_token, encrypt_value, decrypt_hashid, get_pagination_meta, monthdelta, format_time_utc_to_est, get_slug, convert_seconds_to_time, get_user_age
 from datetime import datetime, timedelta
-import pytest, random, uuid, re
-
+import pytest, random, uuid, re, jwt, unittest
+from unittest import mock
 
 def test_str_to_bool():
     # Test case 1: input string is "False"
@@ -355,3 +355,243 @@ def test_datetime_from_utc_to_local():
     expected_local_dt = utc_dt + timedelta(hours=5, minutes=30)  # Assuming the local timezone has a +05:00 offset
     assert local_dt == expected_local_dt
 
+def test_encode_jwt_token():
+    data = {"user_id": 123, "role": "admin"}
+    JWT_SECRET_KEY = "mysecretkey"
+
+    encoded_token = encode_jwt_token(data, JWT_SECRET_KEY)
+
+    # Verify that the encoded token is not empty
+    assert encoded_token
+
+def test_decode_jwt_token():
+    data = {"user_id": 123, "role": "admin"}
+    JWT_SECRET_KEY = "mysecretkey"
+
+    encoded_token = encode_jwt_token(data, JWT_SECRET_KEY)
+
+    # Verify that the encoded token is not empty
+    assert encoded_token
+
+    # Decode the encoded token to verify its content
+    decoded_token = decode_jwt_token(encoded_token, JWT_SECRET_KEY)
+
+    # Verify that the decoded token matches the original data
+    assert decoded_token == data
+
+def test_encrypt_value():
+    hashid_salt = "abcdefghijklmnopqrstuvwxyz"
+    # Test case 1: Encrypt a valid value
+    value = 12345
+    encoded_val = encrypt_value(value, hashid_salt)
+    print(encoded_val)
+    assert encoded_val != None
+    assert isinstance(encoded_val, str)
+
+    # Test case 2: Encrypt an empty value
+    value = ''
+    encoded_val = encrypt_value(value, hashid_salt)
+    print(encoded_val)
+    assert encoded_val is None
+
+    # Test case 3: Encrypt a non-numeric value
+    value = 'abc'
+    encoded_val = encrypt_value(value, hashid_salt)
+    print(encoded_val)
+    assert encoded_val is None
+
+    # Test case 4: Encrypt a negative value
+    value = -12345
+    encoded_val = encrypt_value(value, hashid_salt)
+    print(encoded_val)
+    assert encoded_val is None
+
+    # Test case 5: Encrypt a floating-point value
+    value = 123.45
+    encoded_val = encrypt_value(value, hashid_salt)
+    print(encoded_val)
+    assert encoded_val is None
+
+def test_decrypt_hashid():
+    # Test case 1: Valid Hashid
+    hashval = "ZYQ6xwr50d"
+    hashid_salt = "abcdefghijklmnopqrstuvwxyz"
+    expected_decoded_val = 12345
+    assert decrypt_hashid(hashval, hashid_salt) == expected_decoded_val
+
+    # Test case 2: Invalid Hashid
+    hashval = "invalid_hashid"
+    hashid_salt = "abcdefghijklmnopqrstuvwxyz"
+    assert decrypt_hashid(hashval, hashid_salt) is None
+
+    # Test case 3: Empty Hashid
+    hashval = ""
+    hashid_salt = "abcdefghijklmnopqrstuvwxyz"
+    assert decrypt_hashid(hashval, hashid_salt) is None
+
+    # Test case 4: None Hashid
+    hashval = None
+    hashid_salt = "abcdefghijklmnopqrstuvwxyz"
+    assert decrypt_hashid(hashval, hashid_salt) is None
+
+    # Test case 5: Different Hashid Salt
+    hashval = "LX9znW34ab"
+    hashid_salt = "different_salt"
+    assert decrypt_hashid(hashval, hashid_salt) is None
+
+def test_get_pagination_meta():
+    # Test case 1: Pagination with page size provided
+    current_page = 2
+    page_size = 10
+    total_items = 100
+    expected_meta = {
+        'current_page': 2,
+        'page_size': 10,
+        'total_items': 100,
+        'total_pages': 10,
+        'has_next_page': True,
+        'has_previous_page': True,
+        'next_page': 3,
+        'previous_page': 1
+    }
+    assert get_pagination_meta(current_page, page_size, total_items) == expected_meta
+
+    # Test case 2: Pagination with page size not provided
+    current_page = 5
+    page_size = None
+    total_items = 50
+    expected_meta = {
+        'current_page': 5,
+        'page_size': None,
+        'total_items': 50,
+        'total_pages': 5,
+        'has_next_page': None,
+        'has_previous_page': None,
+        'next_page': None,
+        'previous_page': None
+    }
+    assert get_pagination_meta(current_page, page_size, total_items) == expected_meta
+
+    # Test case 3: Pagination with empty items
+    current_page = 1
+    page_size = 10
+    total_items = 0
+    expected_meta = {
+        'current_page': 1,
+        'page_size': 10,
+        'total_items': 0,
+        'total_pages': 0,
+        'has_next_page': False,
+        'has_previous_page': False,
+        'next_page': None,
+        'previous_page': None
+    }
+    assert get_pagination_meta(current_page, page_size, total_items) == expected_meta
+
+def test_monthdelta():
+    # Test case 1: Adding 2 months to March 15, 2022
+    input_date_1 = datetime(2022, 3, 15)
+    delta_months_1 = 2
+    expected_result_1 = datetime(2022, 5, 15)
+    result_1 = monthdelta(input_date_1, delta_months_1)
+    assert result_1 == expected_result_1
+    
+    # Test case 2: Subtracting 3 months from November 30, 2021
+    input_date_2 = datetime(2021, 11, 30)
+    delta_months_2 = -3
+    expected_result_2 = datetime(2021, 8, 30)
+    result_2 = monthdelta(input_date_2, delta_months_2)
+    assert result_2 == expected_result_2
+    
+    # Test case 3: Adding 12 months to February 29, 2020 (leap year)
+    input_date_3 = datetime(2020, 2, 29)
+    delta_months_3 = 12
+    expected_result_3 = datetime(2021, 2, 28)
+    result_3 = monthdelta(input_date_3, delta_months_3)
+    assert result_3 == expected_result_3
+    
+    # Test case 4: Subtracting 6 months from January 1, 2023
+    input_date_4 = datetime(2023, 1, 1)
+    delta_months_4 = -6
+    expected_result_4 = datetime(2022, 7, 1)
+    result_4 = monthdelta(input_date_4, delta_months_4)
+    assert result_4 == expected_result_4
+
+def test_format_time_utc_to_est():
+    # Create a UTC datetime object
+    utc_time = datetime(2023, 6, 29, 10, 30, 0)
+
+    # Call the function to convert and format the UTC time to EST
+    formatted_time = format_time_utc_to_est(utc_time)
+
+def test_get_slug():
+    # Mock the time() function to return a fixed timestamp
+    with mock.patch("bombaysoftwares_pysupp.utils.time") as mock_time:
+        mock_time.return_value = 1629937512  # Fixed timestamp for testing
+
+        # Test case 1: Simple string
+        string1 = "Hello, World!"
+        expected_slug1 = "hello-world-1629937512"
+        assert get_slug(string1) == expected_slug1
+
+        # Test case 2: String with special characters
+        string2 = "Let's test this string!"
+        expected_slug2 = "let-s-test-this-string-1629937512"
+        assert get_slug(string2) == expected_slug2
+
+        # Test case 3: Empty string
+        string3 = ""
+        expected_slug3 = "1629937512"
+        assert get_slug(string3) == expected_slug3
+
+        # Test case 4: String with leading/trailing whitespace
+        string4 = "   Python is awesome!   "
+        expected_slug4 = "python-is-awesome-1629937512"
+        assert get_slug(string4) == expected_slug4
+
+        # Test case 5: String with numbers
+        string5 = "Testing 123"
+        expected_slug5 = "testing-123-1629937512"
+        assert get_slug(string5) == expected_slug5
+
+        # Test case 6: String with uppercase letters
+        string6 = "Hello World"
+        expected_slug6 = "hello-world-1629937512"
+        assert get_slug(string6) == expected_slug6
+
+        # Test case 7: String with non-ASCII characters
+        string7 = "Café"
+        expected_slug7 = "cafe-1629937512"
+        assert get_slug(string7) == expected_slug7
+
+def test_convert_seconds_to_time():
+    # Mock the datetime.utcnow() function
+    with mock.patch("bombaysoftwares_pysupp.utils.datetime") as mock_dt:
+        # Set the fixed UTC time for testing
+        mock_dt.utcnow.return_value = datetime(2023, 6, 29, 12, 0, 0)
+
+        # Test case 1: 1 hour (3600 seconds)
+        seconds1 = 3600
+        expected_time1 = '2023-06-29 13:00:00'
+        assert convert_seconds_to_time(seconds1) == expected_time1
+
+        # Test case 2: 1 day (86400 seconds)
+        seconds2 = 86400
+        expected_time2 = '2023-06-30 12:00:00'
+        assert convert_seconds_to_time(seconds2) == expected_time2
+
+def test_get_user_age():
+    # Mock the datetime.utcnow() function
+    with mock.patch("bombaysoftwares_pysupp.utils.datetime") as mock_dt:
+        # Set the fixed UTC time for testing
+        mock_dt.utcnow.return_value = datetime(2023, 1, 1)
+
+        # Test case 1: Birthdate in the past
+        birthdate1 = datetime(1990, 5, 15)
+        expected_age1 = {'year': 32, 'month': 7, 'day': 17}
+        assert get_user_age(birthdate1) == expected_age1
+
+        # Test case 2: Birthdate in the past
+        birthdate2 = datetime(1985, 10, 3)
+        expected_age2 = {'year': 37, 'month': 2, 'day': 29}
+        assert get_user_age(birthdate2) == expected_age2
