@@ -5,6 +5,5 @@ repos:
         name: pytest-check
         entry: pytest tests
         language: python
-        additional_dependencies: [pre-commit, pytest]
         always_run: true
         pass_filenames: false

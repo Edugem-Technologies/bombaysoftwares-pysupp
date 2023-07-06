@@ -1,7 +1,10 @@
+import random, re, string, uuid, jwt, math, pytz
+from dateutil.relativedelta import relativedelta
 from datetime import datetime, timedelta
 from time import time
-import random, re, string, uuid
 from random import randint
+from hashids import Hashids
+from slugify import slugify
 
 def str_to_bool(s):
     """
@@ -591,3 +594,280 @@ def datetime_from_utc_to_local(utc_datetime):
     now_timestamp = time()
     offset = datetime.fromtimestamp(now_timestamp) - datetime.utcfromtimestamp(now_timestamp)
     return utc_datetime + offset
+
+def encode_jwt_token(data, JWT_SECRET_KEY):
+    """
+    Encodes data into a JWT token using the specified secret key.
+
+    This function takes a dictionary `data` and a `JWT_SECRET_KEY` as input and encodes the data into a JWT token.
+    The encoded token is returned.
+
+    Args:
+        data (dict): The data to be encoded into the JWT token.
+        JWT_SECRET_KEY (str): The secret key used for encoding the token.
+
+    Returns:
+        str: The encoded JWT token.
+
+    Example:
+        >>> data = {"user_id": 123, "role": "admin"}
+        >>> JWT_SECRET_KEY = "mysecretkey"
+        >>> encode_jwt_token(data, JWT_SECRET_KEY)
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxMjMsInJvbGUiOiJhZG1pbiJ9.H2jxN8d_WBbs83n_5tYnq2sblYs'
+
+    """
+    return jwt.encode(data, JWT_SECRET_KEY)
+
+def decode_jwt_token(encoded_jwt, JWT_SECRET_KEY):
+    """
+    Decodes a JWT token using the specified secret key.
+
+    This function takes an encoded JWT token `encoded_jwt` and a `JWT_SECRET_KEY` as input and decodes the token.
+    The decoded token containing the original data is returned.
+
+    Args:
+        encoded_jwt (str): The encoded JWT token to be decoded.
+        JWT_SECRET_KEY (str): The secret key used for decoding the token.
+
+    Returns:
+        dict: The decoded JWT token containing the original data.
+
+    Example:
+        >>> encoded_jwt = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxMjMsInJvbGUiOiJhZG1pbiJ9.H2jxN8d_WBbs83n_5tYnq2sblYs'
+        >>> JWT_SECRET_KEY = "mysecretkey"
+        >>> decode_jwt_token(encoded_jwt, JWT_SECRET_KEY)
+        {'user_id': 123, 'role': 'admin'}
+
+    """
+
+    return jwt.decode(encoded_jwt, JWT_SECRET_KEY, algorithms=["HS256"])
+
+def encrypt_value(value, hashid_salt):
+    """
+    Encrypt a non-negative integers value using Hashids and return the encoded Hashid.
+
+    This function encrypts a given value using the specified salt and minimum length.
+    If a valid value is provided, it returns the encoded Hashid; otherwise, it returns None.
+
+    Args:
+        value(int): The value to encrypt.
+
+    Returns:
+        str or None: The encoded Hashid if a valid value is provided, None otherwise.
+
+    Example:
+        >>> encrypt_value(12345)
+
+    """
+    if value:
+        try:
+            _hashids = Hashids(hashid_salt, min_length=10)
+            encoded_val = _hashids.encode(value) # Encode the value into a Hashid
+            if encoded_val:
+                return encoded_val # Return the encoded Hashid
+        except Exception as e:  # type: ignore  # noqa: F841
+            pass
+    return None # Return None if no valid value or encoded Hashid is found
+
+def decrypt_hashid(hashval, hashid_salt):
+    """
+    Decrypt a Hashid and return the decoded value.
+
+    This function decrypts a given Hashid using the specified salt and minimum length.
+    If a valid Hashid is provided, it returns the decoded value; otherwise, it returns None.
+
+    Args:
+        hashval (str): The Hashid to decrypt.
+
+    Returns:
+        int or None: The decoded value if a valid Hashid is provided, None otherwise.
+
+    Example:
+        >>> decrypt_hashid("LX9znW34ab")
+
+    """
+    if hashval:
+        _hashids = Hashids(hashid_salt, min_length=10)
+        decoded_val = _hashids.decode(hashval) # Decode the Hashid
+        if decoded_val:
+            return decoded_val[0] # Return the decoded value
+    return None # Return None if no valid Hashid or decoded value is found
+
+def get_pagination_meta(current_page, page_size, total_items):
+    """
+    Generate pagination metadata for frontend.
+
+    Args:
+        current_page (int): The current page number.
+        page_size (int): The number of items per page.
+        total_items (int): The total number of items.
+
+    Returns:
+        dict: Pagination metadata.
+
+    Example:
+        pagination_meta = get_pagination_meta(current_page=2, page_size=10, total_items=100)
+        print(pagination_meta)
+        # Output: {
+        #     'current_page': 2,
+        #     'page_size': 10,
+        #     'total_items': 100,
+        #     'total_pages': 10,
+        #     'has_next_page': True,
+        #     'has_previous_page': True,
+        #     'next_page': 3,
+        #     'previous_page': 1
+        # }
+
+    """
+    if page_size:
+        total_pages = math.ceil(total_items / page_size)
+        has_next_page = current_page < total_pages
+        has_previous_page = current_page > 1
+        next_page = current_page + 1 if has_next_page else None
+        previous_page = current_page - 1 if has_previous_page else None
+    else:
+        # If page_size is not provided, treat the current_page as the total_pages
+        total_pages = current_page
+        has_next_page = None
+        has_previous_page = None
+        next_page = None
+        previous_page = None
+        page_size = None
+
+    return {
+        'current_page': current_page,
+        'page_size': page_size,
+        'total_items': total_items,
+        'total_pages': total_pages,
+        'has_next_page': has_next_page,
+        'has_previous_page': has_previous_page,
+        'next_page': next_page,
+        'previous_page': previous_page
+}
+
+def monthdelta(date, delta):
+    """
+    Add or subtract a specified number of months to/from a given date.
+
+    This function calculates a new date by adding or subtracting the specified number of months to/from the given date.
+    It takes into account the varying number of days in each month and handles leap years correctly.
+
+    Args:
+        date (datetime.date): The date to which the months should be added or subtracted.
+        delta (int): The number of months to add (if positive) or subtract (if negative).
+
+    Returns:
+        datetime.date: The resulting date after adding or subtracting the specified number of months.
+
+    Example:
+        >>> input_date = datetime(2022, 3, 15)
+        >>> delta_months = 2
+        >>> result_date = monthdelta(input_date, delta_months)
+        >>> result_date
+        2022-05-15
+
+    """
+    m, y = (date.month + delta) % 12, date.year + ((date.month) + delta - 1) // 12
+    if not m:
+        m = 12
+    d = min(date.day, [31, 29 if y % 4 == 0 and (not y % 100 == 0 or y % 400 == 0) else 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][m - 1])
+    return datetime(year=y, month=m, day=d)
+
+def format_time_utc_to_est(datetime_object, datetime_format = '%Y-%m-%d %I:%M:%S %p'):
+    """
+    Convert a UTC datetime object to Eastern Standard Time (EST) and format it as a string.
+
+    Args:
+        datetime_object (object): The UTC datetime object to convert.
+        datetime_format (str): The format string for the output datetime. Defaults to '%Y-%m-%d %I:%M:%S %p'.
+
+    Returns:
+        str: The formatted datetime string in EST.
+
+    Example:
+        utc_time = datetime.datetime(2023, 6, 29, 10, 30, 0)
+        formatted_time = format_time_utc_to_est(utc_time)
+        print(formatted_time)
+        # Output: '2023-06-29 06:30:00 AM'
+
+    """
+    est = pytz.timezone('US/Eastern') # Define the Eastern Standard Time (EST) timezone
+    utc = pytz.utc # Define the UTC timezone
+    fmt = datetime_format # Define the format string for the output datetime
+    formatted_datetime_string = utc.localize(
+        datetime_object).astimezone(est).strftime(fmt)
+    return formatted_datetime_string  
+
+def get_slug(string):
+    """
+    Generates a slug for a given string.
+
+    This function generates a unique timestamp by converting the current time to a string and extracting the 0'th index.
+    The original string and the unique timestamp are then concatenated, and the resulting string is slugified.
+    The slug is returned as the result.
+
+    Parameters:
+        string (str): The original string to generate a slug from.
+
+    Returns:
+        str: The generated slug.
+
+    Example:
+        >>> get_slug('Hello, World!')
+        'hello-world-1629937512'
+
+    """
+    unique_timestamp = str(time()).split(".")[0] # Generate a unique timestamp by converting the current time to a string and extracting the 0'th index.
+    return slugify(f"{string} {unique_timestamp}") # Concatenate the original string and the unique timestamp, and then slugify the resulting string
+
+def convert_seconds_to_time(seconds):
+    """
+    Converts a given number of seconds to a formatted time string.
+
+    This function takes a number of seconds as input and converts it to a formatted time string in the format "%Y-%m-%d %H:%M:%S".
+    The converted time string is returned.
+
+    Args:
+        seconds (int): The number of seconds to be converted.
+
+    Returns:
+        str: The formatted time string representing the converted time.
+
+    Example:
+        >>> convert_seconds_to_time(3600)
+        converted= 2023-06-29 15:00:00
+        '2023-06-29 15:00:00'
+        >>> convert_seconds_to_time(86400)
+        converted= 2023-06-30 12:00:00
+        '2023-06-30 12:00:00'
+
+    """
+    a = datetime.utcnow() # Get the current UTC time
+    b = a + timedelta(0,seconds) # Add the given number of seconds to the current time
+    print("converted=",b.strftime("%Y-%m-%d %H:%M:%S")) # Print the converted time
+    return b.strftime("%Y-%m-%d %H:%M:%S") # Return the formatted time string
+
+def get_user_age(date):
+    """
+    Calculates the age of a user based on their birthdate.
+
+    This function takes a birthdate as input and calculates the user's age in years, months, and days.
+    It uses the `datetime.utcnow()` function to get the current date and time and the `relativedelta` class
+    from the `dateutil` module to calculate the difference between the current date and the birthdate.
+
+    Args:
+        date (datetime): The birthdate of the user.
+
+    Returns:
+        dict: A dictionary containing the user's age in years, months, and days.
+
+    Example:
+        >>> get_user_age(datetime(1990, 5, 15))
+        {'year': 33, 'month': 11, 'day': 14}
+        >>> get_user_age(datetime(1985, 10, 3))
+        {'year': 37, 'month': 8, 'day': 26}
+        
+    """
+    diff = relativedelta(datetime.utcnow(), date)
+    return {"year": diff.years, "month": diff.months, "day": diff.days} 

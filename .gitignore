@@ -1,5 +1,5 @@
 .pytest_cache
-pykit/__pycache__
+bombaysoftwares_pysupp/__pycache__
 tests/__pycache__
 venv
 build
