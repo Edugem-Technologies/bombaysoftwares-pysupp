@@ -1,7 +1,0 @@
-PyJWT
-hashids
-python-dateutil
-python-slugify
-pytz
-six
-text-unidecode
