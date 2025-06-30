@@ -1,10 +1,12 @@
 import random, re, string, uuid, jwt, math, pytz
 from dateutil.relativedelta import relativedelta
 from datetime import datetime, timedelta
+from typing import List, Optional, Dict, Any
 from time import time
 from random import randint
 from hashids import Hashids
 from slugify import slugify
+from urllib.parse import urlparse, parse_qs
 
 def str_to_bool(s):
     """
@@ -871,3 +873,92 @@ def get_user_age(date):
     """
     diff = relativedelta(datetime.utcnow(), date)
     return {"year": diff.years, "month": diff.months, "day": diff.days} 
+
+
+def clean_email(email: str) -> Optional[str]:
+    """
+    Cleans email data coming from the frontend.
+
+    Args:
+        email (str): Raw email input.
+
+    Returns:
+        str: Cleaned email if valid, or None if invalid.
+    """
+    if not email:
+        return None
+
+    # Strip leading/trailing spaces and convert to lowercase
+    cleaned_email = email.strip().lower()
+
+    # Validate email format using a more strict regex that prevents double dots
+    email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}$'
+    if not re.match(email_pattern, cleaned_email):  # type: ignore  # noqa: FKA100
+        return None  # Invalid email
+
+    return cleaned_email
+
+
+def is_value_in_enum(enum_class: Any, value: Any) -> bool:
+    """
+    Check if a value exists in any enum member.
+
+    Args:
+        enum_class: The enum class to check against
+        value: The value to look for
+
+    Returns:
+        bool: True if value exists in enum, False otherwise
+
+    Example:
+        >>> from enum import Enum
+        >>> class Colors(Enum):
+        ...     RED = 'red'
+        ...     BLUE = 'blue'
+        >>> is_value_in_enum(Colors, 'red')
+        True
+    """
+    try:
+        return any(value == item.value for item in enum_class)
+    except (AttributeError, TypeError):
+        return False
+
+
+def is_valid_url(url_string: str) -> bool:
+    """
+    Check if the given string is a valid URL.
+
+    Args:
+        url_string (str): The string to validate as URL
+
+    Returns:
+        bool: True if string is a valid URL, False otherwise
+    """
+    try:
+        result = urlparse(url_string)
+        # Check if scheme and network location are present
+        return all([result.scheme, result.netloc])
+    except Exception:
+        return False
+
+
+def extract_url_params(url: str) -> Dict[str, List[str]]:
+    """
+    Extract query parameters from a URL.
+
+    Args:
+        url (str): The URL to parse
+
+    Returns:
+        Dict[str, list]: Dictionary containing parameter names and their values
+
+    Example:
+        url = "http://example.com?token=abc&expires=123"
+        result = extract_url_params(url)
+        # Returns: {'token': ['abc'], 'expires': ['123']}
+    """
+    try:
+        parsed_url = urlparse(url)
+        return parse_qs(parsed_url.query, keep_blank_values=True)
+    except Exception:
+        return {}

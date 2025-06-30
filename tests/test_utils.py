@@ -1,7 +1,9 @@
-from bombaysoftwares_pysupp.utils import str_to_bool, format_email, is_invalid, get_current_year, convert_date_of_birth_to_datetime, generate_otp, convert_time, file_name_to_readable_name, get_body_mass_index, is_number, days_to_seconds, generate_random_string, generate_random_number_string, random_with_n_digits, check_is_not_none_or_empty, format_inr, aadhaar_format, format_datetime, get_time_duration, get_api_key, generate_slug_by_org_id, InputValidation, datetime_from_utc_to_local, encode_jwt_token, decode_jwt_token, encrypt_value, decrypt_hashid, get_pagination_meta, monthdelta, format_time_utc_to_est, get_slug, convert_seconds_to_time, get_user_age
+from bombaysoftwares_pysupp.utils import str_to_bool, format_email, is_invalid, get_current_year, convert_date_of_birth_to_datetime, generate_otp, convert_time, file_name_to_readable_name, get_body_mass_index, is_number, days_to_seconds, generate_random_string, generate_random_number_string, random_with_n_digits, check_is_not_none_or_empty, format_inr, aadhaar_format, format_datetime, get_time_duration, get_api_key, generate_slug_by_org_id, InputValidation, datetime_from_utc_to_local, encode_jwt_token, decode_jwt_token, encrypt_value, decrypt_hashid, get_pagination_meta, monthdelta, format_time_utc_to_est, get_slug, convert_seconds_to_time, get_user_age, clean_email, is_value_in_enum, is_valid_url, extract_url_params
 from datetime import datetime, timedelta
 import pytest, random, uuid, re, jwt, unittest
 from unittest import mock
+from enum import Enum
+from urllib.parse import urlparse, parse_qs
 
 def test_str_to_bool():
     # Test case 1: input string is "False"
@@ -595,3 +597,128 @@ def test_get_user_age():
         birthdate2 = datetime(1985, 10, 3)
         expected_age2 = {'year': 37, 'month': 2, 'day': 29}
         assert get_user_age(birthdate2) == expected_age2
+
+def test_clean_email():
+    # Test case 1: Valid email with mixed case and spaces
+    assert clean_email("  John.Doe@EXAMPLE.com ") == "john.doe@example.com"
+
+    # Test case 2: Valid email with special characters
+    assert clean_email("user+tag@domain.co.uk") == "user+tag@domain.co.uk"
+
+    # Test case 3: Empty string
+    assert clean_email("") is None
+
+    # Test case 4: None value
+    assert clean_email(None) is None
+
+    # Test case 5: Invalid email format (missing @)
+    assert clean_email("invalid-email") is None
+
+    # Test case 6: Invalid email format (missing domain)
+    assert clean_email("user@") is None
+
+    # Test case 7: Invalid email format (invalid characters)
+    assert clean_email("user@domain..com") is None
+
+    # Test case 8: Valid email with underscores
+    assert clean_email("user_name@domain.com") == "user_name@domain.com"
+
+
+def test_is_value_in_enum():
+    # Define test enum
+    class TestEnum(Enum):
+        RED = 'red'
+        BLUE = 'blue'
+        GREEN = 'green'
+        NUMBER = 42
+
+    # Test case 1: Value exists in enum
+    assert is_value_in_enum(TestEnum, 'red') is True
+
+    # Test case 2: Value exists in enum (number)
+    assert is_value_in_enum(TestEnum, 42) is True
+
+    # Test case 3: Value does not exist in enum
+    assert is_value_in_enum(TestEnum, 'yellow') is False
+
+    # Test case 4: Value does not exist in enum (number)
+    assert is_value_in_enum(TestEnum, 100) is False
+
+    # Test case 5: None value
+    assert is_value_in_enum(TestEnum, None) is False
+
+    # Test case 6: Invalid enum class (not an enum)
+    assert is_value_in_enum(str, 'test') is False
+
+    # Test case 7: Empty string
+    assert is_value_in_enum(TestEnum, '') is False
+
+
+def test_is_valid_url():
+    # Test case 1: Valid HTTP URL
+    assert is_valid_url("http://example.com") is True
+
+    # Test case 2: Valid HTTPS URL
+    assert is_valid_url("https://www.example.com/path") is True
+
+    # Test case 3: Valid URL with query parameters
+    assert is_valid_url("https://example.com/path?param=value") is True
+
+    # Test case 4: Valid URL with port
+    assert is_valid_url("http://example.com:8080") is True
+
+    # Test case 5: Invalid URL (missing scheme)
+    assert is_valid_url("example.com") is False
+
+    # Test case 6: Invalid URL (missing domain)
+    assert is_valid_url("http://") is False
+
+    # Test case 7: Invalid URL (empty string)
+    assert is_valid_url("") is False
+
+    # Test case 8: Invalid URL (None)
+    assert is_valid_url(None) is False
+
+    # Test case 9: Valid URL with subdomain
+    assert is_valid_url("https://api.example.com") is True
+
+    # Test case 10: Valid URL with special characters in path
+    assert is_valid_url("https://example.com/path/to/file.html") is True
+
+
+def test_extract_url_params():
+    # Test case 1: URL with single parameter
+    result = extract_url_params("http://example.com?token=abc123")
+    assert result == {"token": ["abc123"]}
+
+    # Test case 2: URL with multiple parameters
+    result = extract_url_params("http://example.com?token=abc&expires=123&type=refresh")
+    assert result == {"token": ["abc"], "expires": ["123"], "type": ["refresh"]}
+
+    # Test case 3: URL with duplicate parameters
+    result = extract_url_params("http://example.com?param=value1&param=value2")
+    assert result == {"param": ["value1", "value2"]}
+
+    # Test case 4: URL with no parameters
+    result = extract_url_params("http://example.com")
+    assert result == {}
+
+    # Test case 5: URL with empty parameter value
+    result = extract_url_params("http://example.com?param=")
+    assert result == {"param": [""]}
+
+    # Test case 6: URL with special characters in parameters
+    result = extract_url_params("http://example.com?name=John%20Doe&email=john@example.com")
+    assert result == {"name": ["John Doe"], "email": ["john@example.com"]}
+
+    # Test case 7: Invalid URL
+    result = extract_url_params("invalid-url")
+    assert result == {}
+
+    # Test case 8: Empty string
+    result = extract_url_params("")
+    assert result == {}
+
+    # Test case 9: None value
+    result = extract_url_params(None)
+    assert result == {}
